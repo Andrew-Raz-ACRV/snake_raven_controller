@@ -1,6 +1,7 @@
 # Snake Raven Controller
 
 This software is a ROS node that generates RAVEN joint position commands for it to follow a trajectory from keyboard teleoperation. There are 2 ROS nodes in this folder: talkerSnakeRaven and listenerSnakeRaven. 
+NOTE YOU WILL NEED AN include folder with the C++ linear algebra tools 'Eigen' in it.
 
 
 ## ROS topics :
