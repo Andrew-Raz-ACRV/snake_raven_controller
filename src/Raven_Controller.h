@@ -1,7 +1,7 @@
 #ifndef RAVEN_CONTROLLER_H_
 #define RAVEN_CONTROLLER_H_
 
-//#include "Raven_PathPlanner.h"
+//Raven dependencies
 #include <string>
 #include <vector>
 #include <map>
@@ -16,13 +16,10 @@
 #include <pthread.h>
 #include <termios.h>
 #include <queue>
-//my laptop
-#include "/home/andrew/catkin_ws/src/snake_raven_controller/src/raven_2/raven_automove.h"
-#include "/home/andrew/catkin_ws/src/snake_raven_controller/src/raven_2/raven_state.h"
 
-//on the raven computer
-//#include "/home/qut-raven/raven_18_05/src/snake_raven_controller/src/raven_2/raven_automove.h"
-//#include "/home/qut-raven/raven_18_05/src/snake_raven_controller/src/raven_2/raven_state.h"
+//ROS messages
+#include "raven_2/raven_state.h"
+#include "snake_raven_controller/raven_jointmove.h"
 
 //Snake Raven Class
 #include "SnakeRaven.h" // Snake Raven Class
@@ -49,15 +46,24 @@
 #define GRASP1_GREEN 14
 #define GRASP2_GREEN 15
 
-//ROS publish 
+//ROS publish //1000 on Raven computer, 100 on laptop
 #define ROS_PUBLISH_RATE 1000 	// in Hz
+
+
+//Controller settings:
+#define dx_max 2.0 //mm
+#define tol_error 0.5//magnitude error
+#define motor_maxspeed_rad 0.01 //rad
+#define motor_maxspeed_mm 0.001 //mm
 
 using namespace raven_2;
 using namespace std;
+using namespace snake_raven_controller;
 
 //State machine modes
 enum mode {
 	idle,
+	calibration,
 	joint_control,
 	snake_teleop
 };
@@ -70,13 +76,20 @@ class Raven_Controller
 		bool SHOW_STATUS;
 		bool RECEIVED_FIRST;
 		bool PAUSE;
+		bool CALIBRATED;
 
 		pthread_t console_thread;
 		pthread_t ros_thread;
 
-		ros::Publisher RavenAutomove_publisher;
+		ros::Publisher RavenJointmove_publisher;
 		ros::Subscriber RavenState_subscriber;
 
+		float delta_joint[16];
+		float calibrate_rate[16];
+		float calibrate_offset[16];
+		float q_initial[16];
+		float NEXT_JOINT_STATE[16];
+		int KEY;
 		raven_state CURR_RAVEN_STATE;
 
 		//Snake Control
@@ -84,7 +97,6 @@ class Raven_Controller
 		SnakeRaven GreenSnake;
 		Matrix4d Ttarget;
 		MatrixXd dx;
-		double dx_max;
 		mode state;
 
 	public:
@@ -96,13 +108,17 @@ class Raven_Controller
 		bool menu_words(bool);
 		bool joint_menu_words(bool);
 		bool teleop_menu_words(bool);
+		bool calibration_menu_words(bool); 
 		void final_words();
 
 		//State machine functions
 		void jointcontrol_keyboard_map(int);
 		void updateSnakejoints();
-		void keyboard_teleop_map(int);
-		void updateRavenState();
+
+		MatrixXd keyboard_teleop_map(int, const MatrixXd&);
+		float saturate_round(float, float);
+		void updateRavenJointarray();
+		void calibrate_snake_raven_state();
 
 		void start_thread();		// thread management
 		void join_thread();
@@ -111,7 +127,7 @@ class Raven_Controller
 		static void *static_console_process(void*);
 		static void *static_ros_process(void*);
 
-		void publish_raven_automove();			 // ROS publish
+		void publish_raven_jointmove();			 // ROS publish
 		void callback_raven_state(raven_2::raven_state); // ROS subscribe
 
 		void output_PUBinfo();

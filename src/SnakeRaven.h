@@ -12,15 +12,17 @@ author: Andrew Razjigaev 2020
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
+#include <iostream>
 
 using namespace Eigen;
+using namespace std;
 
 #define PI           3.14159265358979323846  /* pi */
 
 //Set the maximum amount of modules for Snake Raven to have
 //This is needed for memory allocation as object's internal size cannot grow
 //You also cannot set it to 2 and use 1 it must be set to the current design model
-#define Max_m 2
+#define Max_m 1
 
 /*
 Kinematics Math Functions for the Snake Raven Manipulator

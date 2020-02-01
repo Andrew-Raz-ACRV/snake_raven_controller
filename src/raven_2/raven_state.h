@@ -188,7 +188,8 @@ template<class ContainerAllocator>
 struct MD5Sum< ::raven_2::raven_state_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "173f52385e84b98995f307af4bea25a2";
+    //return "173f52385e84b98995f307af4bea25a2";
+    return "ce9e7f4969049d8bb365de3c98461a01";
   }
 
   static const char* value(const  ::raven_2::raven_state_<ContainerAllocator> &) { return value(); } 

@@ -1,7 +1,6 @@
 # Snake Raven Controller
 
 This software is a ROS node that generates RAVEN joint position commands for it to follow a trajectory from keyboard teleoperation. There are 2 ROS nodes in this folder: talkerSnakeRaven and listenerSnakeRaven. 
-NOTE YOU WILL NEED AN include folder with the C++ linear algebra tools 'Eigen' in it.
 
 
 ## ROS topics :
@@ -92,7 +91,7 @@ User can choose to control joints individually or control the desired end-effect
 
 ## Spec : 
 
-1. **publish rate** : The raven_automove.msg is being sent at 1000 Hz.
+1. **publish rate** : The raven_jointmove.msg is being sent at 1000 Hz.
 
 2. **feedback rate** : The raven_state.msg is being sent at 100 Hz in listener.cpp. But in actual RAVEN software, raven_state.msg is updated at 1000 Hz.
 

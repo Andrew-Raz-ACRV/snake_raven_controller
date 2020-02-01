@@ -12,37 +12,45 @@ SnakeRaven::SnakeRaven() {
 	q = MatrixXd::Zero(DOF, 1); // Joint vector
 
 	//Parameter sets:
+	w = 4;//mm
+	isrightarm = true;
+
+	//Calibration constants
+	rate << MatrixXd::Ones(DOF, 1);
+	offset << MatrixXd::Zero(DOF, 1);
+
 	if (m == 1) {
 		//Single module
 		alpha << 1.24; //radians
 		n << 3; //integers
 		d << 1.62; //mm
-		//Initial configuration
-		q << 0, 0, 0, 0, 0;
+		//Initial Calibration configuration
+		if (isrightarm){
+			q << deg2rad(-39.5967), deg2rad(-77.9160), 0, 0, 0;
+		}
+		else{
+			q << deg2rad(39.5967), deg2rad(-102.0840), 0, 0, 0;
+		}
 	}
 	else if (m == 2) {
 		//Double module
 		alpha << 1.39, 1.18; //radians
 		n << 1, 3; //integers
 		d << 6, 0.41; //mm
-		//Initial configuration
-		q << 0, 0, 0, 0, 0, 0, 0;
-		//q << 0, 0, 25, 0.2, 0.05, 0.4, 0.1;
+		//Initial Calibration configuration
+		if (isrightarm){
+			q << deg2rad(-39.5967), deg2rad(-77.9160), 0, 0, 0, 0, 0;
+		}
+		else{
+			q << deg2rad(39.5967), deg2rad(-102.0840), 0, 0, 0, 0, 0;
+		}
 	}
-	
-	//Other parameters
-	w = 4;//mm
-	isrightarm = true;
 
 	//Tool Transform is a short z-axis translation
 	Tool = Translation3d(0, 0, 5);
 
 	//Get Neutral Tendon lengths
 	dL0 = GetTendonLengths();
-
-	//Calibration constants
-	rate << MatrixXd::Ones(DOF, 1);
-	offset << MatrixXd::Zero(DOF, 1);
 	
 	//Run all functions
 	Tend = FK(); //initial tool pose
@@ -52,8 +60,8 @@ SnakeRaven::SnakeRaven() {
 	//Automate Joint limit definitions:
 
 	//Joint Limit definition
-	ql(0) = -PI / 2; ql(1) = -PI / 2; ql(2) = -50;//mm
-	qu(0) = PI / 2; qu(1) = PI / 2; qu(2) = 200;//mm
+	ql(0) = -2*PI; ql(1) = -2*PI; ql(2) = -300;//mm
+	qu(0) = 2*PI; qu(1) = 2*PI; qu(2) = 300;//mm
 
 	//Variable Module Joint limits:
 	for (int i = 0; i < m; i++)
@@ -723,9 +731,11 @@ MatrixXd applyJointLimits(const MatrixXd& q, const MatrixXd& ql, const MatrixXd&
 	{
 		if (q(i) < ql(i)) {
 			q_(i) = ql(i);
+			cout<<"Lower limit "<<i<<endl;
 		}
 		else if (q(i) > qu(i)) {
 			q_(i) = qu(i);
+			cout<<"Upper limit "<<i<<endl;
 		}
 	}
 

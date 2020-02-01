@@ -1,14 +1,17 @@
+/*
+This is the listener.cpp it is a test script that subscribes to raven_jointmove and publishes raven_state
+
+*/
+
 #include <string.h>
 #include <pthread.h>
 #include <ros/ros.h>
 #include <ros/transport_hints.h>
 #include <tf/transform_datatypes.h>
-//#include "bullet/bullet3-2.83.7/src/LinearMath/btVector3.h"
-//#include "bullet/bullet3-2.83.7/src/LinearMath/btTransform.h"
-//#include "bullet/bullet3-2.83.7/src/LinearMath/btQuaternion.h"
-#include "raven_2/raven_automove.h"
+//ROS messages
 #include "raven_2/raven_state.h"
-#include "DS1.h" //struct param_pass is defined here.
+#include "snake_raven_controller/raven_jointmove.h"
+#include "raven_2/DS1.h" //struct param_pass is defined here.
 
 #define ROS_PUBLISH_RATE 100
 #define LEFT_ARM 0  //is also the GOLD_ARM
@@ -35,9 +38,10 @@
 
 using namespace raven_2;
 using namespace std;
+using namespace snake_raven_controller;
 
 //---------------------------global variables---------------------------
-ros:: Subscriber sub_automove;
+ros:: Subscriber sub_jointmove;
 ros:: Publisher pub_ravenstate;
 
 raven_2::raven_state CURR_RAVEN_STATE;
@@ -45,12 +49,17 @@ raven_2::raven_state CURR_RAVEN_STATE;
 int PUB_COUNT;
 int SUB_COUNT;
 static struct param_pass data1;
+
+float array[16];
+
+float start[16];
+
 tf::Quaternion Q_ori[2];
 
 pthread_t rt_thread;
 
 //-------------------------function declaration-------------------------
-void autoincrCallback(raven_2::raven_automove);
+void autoincrCallback(raven_jointmove);
 int init_ravenstate_publishing(ros::NodeHandle &);
 int init_ros(int, char**);
 void init_sys(int, char**);
@@ -115,60 +124,31 @@ void *rt_process(void*)
 *
 *	\return void
 */
-void autoincrCallback(raven_2::raven_automove msg) //this was in local_io.cpp
+void autoincrCallback(raven_jointmove msg) //this was in local_io.cpp
 {
 	//move msg value into data1 
 
-	//Joint position update:
+	//Joint position update: += is a delta
 
 	//GOLD arm
-	data1.jpos_d[SHOULDER_GOLD] = msg.joint_pos_d[SHOULDER_GOLD];
-	data1.jpos_d[ELBOW_GOLD] = msg.joint_pos_d[ELBOW_GOLD];
-	data1.jpos_d[Z_INS_GOLD] = msg.joint_pos_d[Z_INS_GOLD];
-	data1.jpos_d[TOOL_ROT_GOLD] = msg.joint_pos_d[TOOL_ROT_GOLD];
-	data1.jpos_d[WRIST_GOLD] = msg.joint_pos_d[WRIST_GOLD];
-	data1.jpos_d[GRASP1_GOLD] = msg.joint_pos_d[GRASP1_GOLD];
-	data1.jpos_d[GRASP2_GOLD] = msg.joint_pos_d[GRASP2_GOLD];
+	data1.jpos_d[SHOULDER_GOLD] += msg.delta_joint[SHOULDER_GOLD];
+	data1.jpos_d[ELBOW_GOLD] += msg.delta_joint[ELBOW_GOLD];
+	data1.jpos_d[Z_INS_GOLD] += msg.delta_joint[Z_INS_GOLD];
+	data1.jpos_d[TOOL_ROT_GOLD] += msg.delta_joint[TOOL_ROT_GOLD];
+	data1.jpos_d[WRIST_GOLD] += msg.delta_joint[WRIST_GOLD];
+	data1.jpos_d[GRASP1_GOLD] += msg.delta_joint[GRASP1_GOLD];
+	data1.jpos_d[GRASP2_GOLD] += msg.delta_joint[GRASP2_GOLD];
 
 
 	//Green arm
-	data1.jpos_d[SHOULDER_GREEN] = msg.joint_pos_d[SHOULDER_GREEN];
-	data1.jpos_d[ELBOW_GREEN] = msg.joint_pos_d[ELBOW_GREEN];
-	data1.jpos_d[Z_INS_GREEN] = msg.joint_pos_d[Z_INS_GREEN];
-	data1.jpos_d[TOOL_ROT_GREEN] = msg.joint_pos_d[TOOL_ROT_GREEN];
-	data1.jpos_d[WRIST_GREEN] = msg.joint_pos_d[WRIST_GREEN];
-	data1.jpos_d[GRASP1_GREEN] = msg.joint_pos_d[GRASP1_GREEN];
-	data1.jpos_d[GRASP2_GREEN] = msg.joint_pos_d[GRASP2_GREEN];
+	data1.jpos_d[SHOULDER_GREEN] += msg.delta_joint[SHOULDER_GREEN];
+	data1.jpos_d[ELBOW_GREEN] += msg.delta_joint[ELBOW_GREEN];
+	data1.jpos_d[Z_INS_GREEN] += msg.delta_joint[Z_INS_GREEN];
+	data1.jpos_d[TOOL_ROT_GREEN] += msg.delta_joint[TOOL_ROT_GREEN];
+	data1.jpos_d[WRIST_GREEN] += msg.delta_joint[WRIST_GREEN];
+	data1.jpos_d[GRASP1_GREEN] += msg.delta_joint[GRASP1_GREEN];
+	data1.jpos_d[GRASP2_GREEN] += msg.delta_joint[GRASP2_GREEN];
 
-/*
-	tf::Transform in_incr[2];
-
-	tf::transformMsgToTF(msg.tf_incr[0], in_incr[0]);
-	tf::transformMsgToTF(msg.tf_incr[1], in_incr[1]);
-
-	for (int i=0;i<2;i++)
-	{
-		//add position increment
-		tf::Vector3 tmpvec = in_incr[i].getOrigin();
-      		data1.xd[i].x += int(tmpvec[0]);
-      		data1.xd[i].y += int(tmpvec[1]);
-		data1.xd[i].z += int(tmpvec[2]);
-
-		//add rotation increment
-		tf::Quaternion q_temp(in_incr[i].getRotation());
-		if (q_temp != tf::Quaternion::getIdentity())
-		{
-			int armidx = 1; //just for simplicity for now
-
-			Q_ori[armidx] = q_temp*Q_ori[armidx];
-			tf::Matrix3x3 rot_mx_temp(Q_ori[armidx]);
-			for (int j=0;j<3;j++)
-			for (int k=0;k<3;k++)
-				data1.rd[i].R[j][k] = rot_mx_temp[j][k];
-			
-		}
-	}
-*/
 
 	SUB_COUNT ++;
 }
@@ -185,11 +165,9 @@ void autoincrCallback(raven_2::raven_automove msg) //this was in local_io.cpp
 */
 int init_ravenstate_publishing(ros::NodeHandle &n)  //this was in local_io.cpp
 {
-	//not include this part for now:
-	//..
 
-	pub_ravenstate = n.advertise<raven_state>("raven_state",1);
-	sub_automove = n.subscribe<raven_automove>("raven_automove",1,autoincrCallback,ros::TransportHints().unreliable());
+	pub_ravenstate = n.advertise<raven_state>("ravenstate",1);
+	sub_jointmove = n.subscribe<raven_jointmove>("raven_jointmove",1,autoincrCallback,ros::TransportHints().unreliable());
 
 }
 
@@ -230,42 +208,43 @@ void init_sys(int argc, char** argv)
 */
 void init_raven()
 {
-	//Q_ori[0] =  tf::Quaternion::getIdentity(); //.. maybe unused
-	//Q_ori[1] =  tf::Quaternion::getIdentity();
 
 	//Assume this is our raven init state
-	//..
-	data1.jpos_d[SHOULDER_GOLD] = 1;
-	data1.jpos_d[ELBOW_GOLD] = 2;
-	data1.jpos_d[Z_INS_GOLD] = 3;
-	data1.jpos_d[TOOL_ROT_GOLD] = 4;
-	data1.jpos_d[WRIST_GOLD] = 5;
-	data1.jpos_d[GRASP1_GOLD] = 6;
-	data1.jpos_d[GRASP2_GOLD] = 7;
+	start[SHOULDER_GOLD] = 1;
+	start[ELBOW_GOLD] = 2;
+	start[Z_INS_GOLD] = 3;
+	start[TOOL_ROT_GOLD] = 4;
+	start[WRIST_GOLD] = 5;
+	start[GRASP1_GOLD] = 6;
+	start[GRASP2_GOLD] = 7;
 
 	//Green arm
-	data1.jpos_d[SHOULDER_GREEN] = 8;
-	data1.jpos_d[ELBOW_GREEN] = 9;
-	data1.jpos_d[Z_INS_GREEN] = 10;
-	data1.jpos_d[TOOL_ROT_GREEN] = 11;
-	data1.jpos_d[WRIST_GREEN] = 12;
-	data1.jpos_d[GRASP1_GREEN] = 13;
-	data1.jpos_d[GRASP2_GREEN] = 14;
-/*
-	data1.xd[LEFT_ARM].x = 1; 
-	data1.xd[LEFT_ARM].y = 2;
-	data1.xd[LEFT_ARM].z = 3;
-	data1.xd[RIGHT_ARM].x = 4;
-	data1.xd[RIGHT_ARM].y = 5;
-	data1.xd[RIGHT_ARM].z = 6;
+	start[SHOULDER_GREEN] = 8;
+	start[ELBOW_GREEN] = 9;
+	start[Z_INS_GREEN] = 10;
+	start[TOOL_ROT_GREEN] = 11;
+	start[WRIST_GREEN] = 12;
+	start[GRASP1_GREEN] = 13;
+	start[GRASP2_GREEN] = 14;
 
-	for(int orii=0; orii<3;orii++)
-	for(int orij=0; orij<3;orij++)
-	{
-		data1.rd[ LEFT_ARM].R[orii][orij] = orii*3+orij;
-		data1.rd[RIGHT_ARM].R[orii][orij] = 8 + orii*3+orij;
-	}
-*/
+	//..
+	data1.jpos_d[SHOULDER_GOLD] = start[SHOULDER_GOLD];
+	data1.jpos_d[ELBOW_GOLD] = start[ELBOW_GOLD];
+	data1.jpos_d[Z_INS_GOLD] = start[Z_INS_GOLD];
+	data1.jpos_d[TOOL_ROT_GOLD] = start[TOOL_ROT_GOLD];
+	data1.jpos_d[WRIST_GOLD] = start[WRIST_GOLD];
+	data1.jpos_d[GRASP1_GOLD] = start[GRASP1_GOLD];
+	data1.jpos_d[GRASP2_GOLD] = start[GRASP2_GOLD];
+
+	//Green arm
+	data1.jpos_d[SHOULDER_GREEN] = start[SHOULDER_GREEN];
+	data1.jpos_d[ELBOW_GREEN] = start[ELBOW_GREEN];
+	data1.jpos_d[Z_INS_GREEN] = start[Z_INS_GREEN];
+	data1.jpos_d[TOOL_ROT_GREEN] = start[TOOL_ROT_GREEN];
+	data1.jpos_d[WRIST_GREEN] = start[WRIST_GREEN];
+	data1.jpos_d[GRASP1_GREEN] = start[GRASP1_GREEN];
+	data1.jpos_d[GRASP2_GREEN] = start[GRASP2_GREEN];
+
 }
 
 
@@ -307,8 +286,8 @@ int init_ros(int argc, char** argv)  //this was in rt_process_preempt.cpp
 void output_STATUS()
 {
 	cout<<endl<<endl;
-	ROS_INFO("listenerAutoCircle publish: raven_state[%d]", PUB_COUNT);
-	ROS_INFO("listenerAutoCircle subscribe: raven_automove[%d]", SUB_COUNT);
+	ROS_INFO("listenerSnakeRaven publish: raven_state[%d]", PUB_COUNT);
+	ROS_INFO("listenerSnakeRaven subscribe: raven_jointmove[%d]", SUB_COUNT);
 
 	//Joint position update:
 	for (int i=0; i<2; i++){
@@ -328,27 +307,6 @@ void output_STATUS()
 			}
 		}
 	}
-
-	/*
-	for(int i=0; i<2; i++) 
-	{
-		//display position increment
-		cout<<"\tdata1.xd["<<i<<"] = ";
-		cout<<"("<<data1.xd[i].x<<","<<data1.xd[i].y<<","<<data1.xd[i].z<<")"<<endl;
-
-		//display rotation increment
-		cout<<"\tdata1.rd["<<i<<"] = ";
-		for (int j=0;j<3;j++)
-		{	
-			cout<<endl<<"\t\t";
-			for (int k=0;k<3;k++)
-			{
-				cout<<data1.rd[i].R[j][k]<<"\t";
-			}
-		}
-		cout<<endl;
-	}
-	*/
 }
 
 
@@ -367,50 +325,23 @@ void publish_raven_state_ros()
 	static raven_state msg_raven_state;
 
 	//Insert Left joint position into raven_state
-	msg_raven_state.jpos_d[SHOULDER_GOLD] = data1.jpos_d[SHOULDER_GOLD];
-	msg_raven_state.jpos_d[ELBOW_GOLD] = data1.jpos_d[ELBOW_GOLD];
-	msg_raven_state.jpos_d[Z_INS_GOLD] = data1.jpos_d[Z_INS_GOLD];
-	msg_raven_state.jpos_d[TOOL_ROT_GOLD] = data1.jpos_d[TOOL_ROT_GOLD];
-	msg_raven_state.jpos_d[WRIST_GOLD] = data1.jpos_d[WRIST_GOLD];
-	msg_raven_state.jpos_d[GRASP1_GOLD] = data1.jpos_d[GRASP1_GOLD];
-	msg_raven_state.jpos_d[GRASP2_GOLD] = data1.jpos_d[GRASP2_GOLD];
+	msg_raven_state.jpos[SHOULDER_GOLD] = data1.jpos_d[SHOULDER_GOLD];
+	msg_raven_state.jpos[ELBOW_GOLD] = data1.jpos_d[ELBOW_GOLD];
+	msg_raven_state.jpos[Z_INS_GOLD] = data1.jpos_d[Z_INS_GOLD];
+	msg_raven_state.jpos[TOOL_ROT_GOLD] = data1.jpos_d[TOOL_ROT_GOLD];
+	msg_raven_state.jpos[WRIST_GOLD] = data1.jpos_d[WRIST_GOLD];
+	msg_raven_state.jpos[GRASP1_GOLD] = data1.jpos_d[GRASP1_GOLD];
+	msg_raven_state.jpos[GRASP2_GOLD] = data1.jpos_d[GRASP2_GOLD];
 
 	//Insert Green joint position into raven_state
-	msg_raven_state.jpos_d[SHOULDER_GREEN] = data1.jpos_d[SHOULDER_GREEN];
-	msg_raven_state.jpos_d[ELBOW_GREEN] = data1.jpos_d[ELBOW_GREEN];
-	msg_raven_state.jpos_d[Z_INS_GREEN] = data1.jpos_d[Z_INS_GREEN];
-	msg_raven_state.jpos_d[TOOL_ROT_GREEN] = data1.jpos_d[TOOL_ROT_GREEN];
-	msg_raven_state.jpos_d[WRIST_GREEN] = data1.jpos_d[WRIST_GREEN];
-	msg_raven_state.jpos_d[GRASP1_GREEN] = data1.jpos_d[GRASP1_GREEN];
-	msg_raven_state.jpos_d[GRASP2_GREEN] = data1.jpos_d[GRASP2_GREEN];
+	msg_raven_state.jpos[SHOULDER_GREEN] = data1.jpos_d[SHOULDER_GREEN];
+	msg_raven_state.jpos[ELBOW_GREEN] = data1.jpos_d[ELBOW_GREEN];
+	msg_raven_state.jpos[Z_INS_GREEN] = data1.jpos_d[Z_INS_GREEN];
+	msg_raven_state.jpos[TOOL_ROT_GREEN] = data1.jpos_d[TOOL_ROT_GREEN];
+	msg_raven_state.jpos[WRIST_GREEN] = data1.jpos_d[WRIST_GREEN];
+	msg_raven_state.jpos[GRASP1_GREEN] = data1.jpos_d[GRASP1_GREEN];
+	msg_raven_state.jpos[GRASP2_GREEN] = data1.jpos_d[GRASP2_GREEN];
 
-/*
-	//prepare "msg_raven_state" for publishing
-	msg_raven_state.pos_d[0] = data1.xd[LEFT_ARM].x;
-	msg_raven_state.pos_d[1] = data1.xd[LEFT_ARM].y;
-	msg_raven_state.pos_d[2] = data1.xd[LEFT_ARM].z;
-	msg_raven_state.pos_d[3] = data1.xd[RIGHT_ARM].x;
-	msg_raven_state.pos_d[4] = data1.xd[RIGHT_ARM].y;
-	msg_raven_state.pos_d[5] = data1.xd[RIGHT_ARM].z;
-
-	msg_raven_state.pos[0] = data1.xd[LEFT_ARM].x; //.. actual position (should get that somehow)
-	msg_raven_state.pos[1] = data1.xd[LEFT_ARM].y;
-	msg_raven_state.pos[2] = data1.xd[LEFT_ARM].z;
-	msg_raven_state.pos[3] = data1.xd[RIGHT_ARM].x;
-	msg_raven_state.pos[4] = data1.xd[RIGHT_ARM].y;
-	msg_raven_state.pos[5] = data1.xd[RIGHT_ARM].z;
-
-	for(int orii=0; orii<3;orii++)
-	for(int orij=0; orij<3;orij++)
-	{
-		msg_raven_state.ori[ LEFT_ARM*9+orii*3+orij] = data1.rd[ LEFT_ARM].R[orii][orij];
-		msg_raven_state.ori[RIGHT_ARM*9+orii*3+orij] = data1.rd[RIGHT_ARM].R[orii][orij];
-		
-		//.. actual rotation (should get that somehow)
-		msg_raven_state.ori_d[ LEFT_ARM*9+orii*3+orij] = data1.rd[ LEFT_ARM].R[orii][orij];
-		msg_raven_state.ori_d[RIGHT_ARM*9+orii*3+orij] = data1.rd[RIGHT_ARM].R[orii][orij];
-	}
-*/
 
 	pub_ravenstate.publish(msg_raven_state);
 	
