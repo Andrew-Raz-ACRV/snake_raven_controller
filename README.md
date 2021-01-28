@@ -109,9 +109,9 @@ rosrun snake_raven_controller talkersnakeraven
 
 7. **Selection Menu** : At this point you can choose either:
 
-- 0. **Calibration** - this moves the right arm to be perpendicular to the table and the left arm aside. It will pop up a message saying that you can insert the SnakeRaven tool onto the tool holder. You can use the keyboard to adjust the joints of the robot inividually particularly to insert the SnakeRaven tool to mesh with the robot. Good Calibration is when SnakeRaven is neutral and perpendicular to the table as seen in the SnakeRaven [image](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png).
+_0. **Calibration** - this moves the right arm to be perpendicular to the table and the left arm aside. It will pop up a message saying that you can insert the SnakeRaven tool onto the tool holder. You can use the keyboard to adjust the joints of the robot inividually particularly to insert the SnakeRaven tool to mesh with the robot. Good Calibration is when SnakeRaven is neutral and perpendicular to the table as seen in the SnakeRaven [image](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png).
 
-- 1. **Joint Control** - this allows you to control the robot joints individually with the keyboard without calibration
+_1. **Joint Control** - this allows you to control the robot joints individually with the keyboard without calibration
 
 **Joint Control Keyboard Mapping:**
 
@@ -133,7 +133,7 @@ Right Arm
 - Grasp 1 +/-:       h/n
 - Grasp 2 +/-:       j/m
 
-- 2. **Teleoperation** - this allows you to control the SnakeRaven endeffector via keyboard but only after calibration. It has some additional code in Raven_Controller.cpp to:
+_2. **Teleoperation** - this allows you to control the SnakeRaven endeffector via keyboard but only after calibration. It has some additional code in Raven_Controller.cpp to:
 - record teleoperation control onto a .csv file in the home folder
 - Test the calibration by going to different joint poses at timed intervals
 
