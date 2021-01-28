@@ -1,1 +1,1 @@
-float32[16] delta_joint
+float32[14] delta_joint
