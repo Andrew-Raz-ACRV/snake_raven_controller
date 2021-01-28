@@ -7,12 +7,13 @@ This software primarily contains:
 - A class with functions that solves the forward and inverse kinematics of SnakeRaven in C++
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png)
+A. SnakeRaven on the Raven II B. The adaptor piece C. The snake endeffector 
 
 # Snake Raven Controller
 
 This software contains a ROS node that generates RAVEN joint position commands for it to follow a trajectory from keyboard teleoperation. There are 2 ROS nodes in this folder: talkerSnakeRaven (the main node) and listenerSnakeRaven (a test node that can be used if not connected to the Raven II). 
 
-The Raven II main software **raven_2** is modified (these modifications are in folder [raven_2](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/tree/master/raven_2) to comunicate with the **snake_raven_controller** via publishers and subscribers. An illustration of the control software flowchart is displayed below:
+The Raven II main software **raven_2** is modified (these modifications are in folder [raven_2](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/tree/master/raven_2)) to comunicate with the **snake_raven_controller** via publishers and subscribers. An illustration of the control software flowchart is displayed below:
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/ControlDiagram.PNG)
 
@@ -24,12 +25,12 @@ The two ROS nodes talkerSnakeRaven and listenerSnakeRaven exchange information t
 
 
 ## ROS node communication :
-The ros communication is shown in the rqt_graph below:
+The ROS node communication is shown in the rqt_graph below:
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/rqt_graph_snakeraven.png)
 
-1. **talkerSnakeRaven** : rosrun this file to run node /snake_raven_controller It subscribes to /joint_states ROS topic to get the current joint values and publishes joint deltas in topic /raven_jointmove
-2. **listenerSnakeRaven** : This ROS node is only for testing. It can be used to replace the actual node /r2_control
+1. **talkerSnakeRaven** : rosrun this file to run node **/snake_raven_controller** It subscribes to topic **/joint_states** to get the current joint values and publishes joint deltas in topic **/raven_jointmove**
+2. **listenerSnakeRaven** : This ROS node is only for testing. It can be used to replace the actual node **/r2_control**
 
 ## Prerequisite installation :
 The snake_raven_controller uses Eigen to compute the kinematics control algorithms. To install this do:
@@ -62,31 +63,27 @@ In raven_2/msg
 ## snake_raven_controller main files : 
 The source code for controlling snakeraven
 
-**/msg folder:** 
-
-----**raven_jointmove.msg**
-
-----**raven_state.msg**
-
-----**snakeraven_state.msg**
-    
 **/src folder:**
 
-----**/raven_2 folder:**
-
---------**raven_state.h**
+----**talker.cpp** ------------------------------- (original) This file is where main is and it calls the Raven_Controller class
 
 ----**Raven_Controller.cpp** --------------------- (original) This is where the console interactions and modes are
  
 ----**Raven_Controller.h** ----------------------- (original) This class controls the threads and workflow.
 
-----**SnakeRaven.cpp** -------------------- (original) This is where the kinematics functions are
+----**SnakeRaven.cpp** -------------------- (original) This is where the kinematics functions are for SnakeRaven
 
-----**SnakeRaven.h** ---------------------- (original) This class defines all the kinematic math functions
+----**SnakeRaven.h** ---------------------- (original) This class defines all the SnakeRaven functions
 
 ----**listener.cpp** ----------------------------- (original) A test node to replace the main RAVEN software.
 
-----**talker.cpp** ------------------------------- (original) This file is where main is.
+**/msg folder:** 
+
+----**raven_jointmove.msg**  ----------------- This is where the joint deltas come through
+
+----**raven_state.msg** 
+
+----**snakeraven_state.msg**
 
 **CMakeLists.txt** ------------------------------- (original)
 
@@ -94,46 +91,86 @@ The source code for controlling snakeraven
 
 **package.xml** ---------------------------------- (original) The ROS package.xml file.
 
-The file talker.cpp is the heart of SnakeRaven controller, it is where the main is. This file uses on methods defined in class Raven_Controller. Inside of class Raven_Contoller, there are two threads - ros_thread and console_thread, which takes charge of the ROS publishing/subscribing issues and user console inputs respectively. The class Raven_Contoller depends on class SnakeRaven to compute and design snake robot trajectories. So, it is basically where all the math is. In the class Raven_Controller, there are two SnakeRaven objects managing the motion of LEFT and RIGHT arm of RAVEN. (All these files belong to the talkerSnakeRaven ROS node.)
-If NOT actually connected to the main RAVEN software, the listener.cpp is the simplified version to simulate the main RAVEN software just so talker.cpp has someone to interact with. Thus, listener.cpp will be completely replaced when we actually combine it with the RAVEN code.
+The file talker.cpp is the heart of SnakeRaven controller, it is where the main is. This file uses the class Raven_Controller. Inside Raven_Contoller, there are two threads - ros_thread and console_thread, which takes charge of the ROS publishing/subscribing issues and user console inputs respectively. The class Raven_Contoller depends on class SnakeRaven to compute and design snake robot trajectories. In the class Raven_Controller, there are two SnakeRaven objects managing the motion of LEFT and RIGHT arm of RAVEN. (All these files belong to the talkerSnakeRaven ROS node.)
 
+## How To Use This Code on the Raven II: 
+If you have an assmbled SnakeRaven tool you can follow these instuctions to integrate it to the Raven II with this code:
 
-## How To Use This Code: 
-This software design allows RAVEN to be controlled and follow predefined circular trajectory from any remote computer, so below is the instruction for hardware setup and terminal commands for it to work.
-Computer A: The computer that downloads this snake_raven_controller software and runsroscore from here.
-Computer B: This is the computer that RAVEN main software runs on. (This should be already setup and ready to go.)
+1. **Download** : On the Raven II computer download this package and place the folder **snake_raven_controller** in the Raven II folder e.g. home/raven_18_05
 
-1. **Find out hostname and IP** : On both computer A and computer B, open up a terminal, type in "hostname" to find out the hostname of that computer and type in "ifconfig" to find out the IP address. Note that it will be better and more stable connection-wise if both computers are connected to wired internet. Because wireless connections does not have static IP, and can cause floating IP problem which may cause us to lose connection midway through your control.
-Up to this point, we should have: IP for computer A and B (denoted as IP_A and IP_B later on in the instruction),as well as the hostname for computer A and B  (denoted as hostname_A and hostname_B later on in the instruction).
+2. **Update** : Go to raven_18_05/raven_2 and update its contents with the three /src /msg/ includes folders in the contents of folder [raven_2](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/tree/master/raven_2)
 
-2. **Download snake_raven_controller code** : On computer A, type in "git clone git://github.com/melodysu83/AutoCircle_generater.git" to download this repository to the directory you desire. It should create a AutoCircle_generater folder under that directory. Note that this should be a directory under the your ROS workspace. Then go back to your ROS workspace directory, type in "catkin_make_isolated --pkg AutoCircle_generater", and this should build the software. Now this part of the software is done.
+3. **Make** : Open a new terminal and cd to the Raven II directory. Run catkin_make to compile the new content and modifications
+```
+cd raven_18_05
+source devel/setup.bash
+catkin_make
+```
 
-3. **ssh** : On computer A, open up another terminal and type in "ssh -X hostname_A@IP_B", it should allow you to control computer B from this terminal. Assume you already have RAVEN running on this computer, type in "pwd", and then "roscd raven_2". Note that this RAVEN code should be the RAVEN 10.16 release version in October 2016, because there is a pedal down/pedal up switch where you can control by pressing 'd' and 'u' keys respectively. And this feature is required for the AutoCircle_generater to work. If you don't have the version yet, you can download it from [here](https://github.com/melodysu83/raven_2), and use the indigo branch.
+4. **Run the Raven II** : Without any instruments on the Raven II, roslaunch the robot and press the e-stop and release to go through homing with instruments. 
+```
+roslaunch raven_2 raven_2.launch
+```
 
-4. **Up and running** : On computer A, open up another terminal and run "roscore". Use ths terminal is step 3, type in "sudo roslaunch raven_2 raven_2.launch". Next, initialize RAVEN. After it is initialized, press 'd' and it holds the pedal down state for 5 seconds. If no commend is sent within the time range, it will automatically switch back to pedal up state. If you are constantantly sending commends, then RAVEN will be in pedal down state all the time until you press 'u' manually. But you can always re-press 'd' again if you need to. Within the 5 second, use the terminal in step 2, type in "rosrun AutoCircle_genetater talkerAutoCircle" under the main ROS workspace directory, and you sill need to press "Enter" to start. At this point, you should see RAVEN moving slowly in very small circles already if everything is good. 
+5. **Velocity Joint Control mode** : Press 'm' to change mode and press '2' to start the velocity joint control mode, press the e-stop and release for the mode change to occur.
 
+6. **Run talkerSnakeRaven** : Open a new terminal and run command:
+```
+rosrun snake_raven_controller talkersnakeraven
+```
 
-## Trouble Shooting : 
-These are the problems that may occur to you. Basically if you are running AutoCircle_generater code, and still the pedal down state in RAVEN holds for 5 seconds then jumps back to pedal up, that means there is something wrong with the connection. Try doing the following to identify the problem . If you cannot even run the RAVEN code from terminal in step 2, then it is not even sensing the "roscore" on computer A.
+7. **Selection Menu** : At this point you can choose either:
 
-1. **Internet Connection Issue** : (If you cannot run RAVEN code) On the terminal in step 2, where you ssh to computer B, type in "ping hostname_A", and make sure it works well. If not, try "ping IP_A". If hostname_A fails but IP_A works, that means computer B does not know the name of computer A. Do it by typing in "gedit /etc/hosts" and add in hostname_A IP_A to the list of hosts. If even "ping IP_A" does not work, then there is some internet issue, try checking your internet connection and double check the IP address. Do the same process for computer A on any other terminal, only to change by typing "ping hostname_B" and "ping IP_B". If both sides are working good, 
+0. **Calibration** - this moves the right arm to be perpendicular to the table and the left arm aside. It will pop up a message saying that you can insert the SnakeRaven tool onto the tool holder. You can use the keyboard to adjust the joints of the robot inividually particularly to insert the SnakeRaven tool to mesh with the robot. Good Calibration is when SnakeRaven is neutral and perpendicular to the table as seen in the SnakeRaven image in this readme.
 
-2. **ROS_MASTER_URL** : Make sure you set the ROS_MASTER_URL correctly. It should be the following: On regular terminal on computer A, type in "gedit ~/.bashrc", then set ROS_MASTER_URL = host_A (or IP_A), ROS_IP = host_A (or IP_A). On the terminal you ssh to computer B, type in "gedit ~/.bashrc", then set ROS_MASTER_URL = host_A (or IP_A), ROS_IP = host_B (or IP_B). This can be a tricky part, so be sure to set it correctly. This should ensure the ROS topic publishing and subscribing to be bidirectional.
+1. **Joint Control** - this allows you to control the robot joints individually with the keyboard without calibration
 
-3. **rostopic monitoring** : You can type in "rostoppic echo topicname -c" this on each side to monitor the publishing and subscribing condition and check if it's the problem of receiving ravenstate or sending raven_automove.
+**Joint Control Keyboard Mapping:**
+Left Arm
+Shoulder +/-:      1/q
+Elbow +/-:         2/w
+Z Insertion +/-:   3/e
+Tool Rotation +/-: 4/r
+Wrist +/-:         5/t
+Grasp 1 +/-:       6/y
+Grasp 2 +/-:       7/u
 
+Right Arm
+Shoulder +/-:      a/z
+Elbow +/-:         s/x
+Z Insertion +/-:   d/c
+Tool Rotation +/-: f/v
+Wrist +/-:         g/b
+Grasp 1 +/-:       h/n
+Grasp 2 +/-:       j/m
 
-## Selection Menu : 
-User can choose to control joints individually or control the desired end-effector pose in keyboard teleoperation.
+2. **Teleoperation** - this allows you to control the SnakeRaven endeffector via keyboard but only after calibration. It has some additional code in Raven_Controller.cpp to:
+- record teleoperation control onto a .csv file in the home folder
+- Test the calibration by going to different joint poses at timed intervals
 
+**Endeffector Keyboard Mapping:**
+Relative to the Remote Centre of Motion
+Z+     q
+Z-     e
+Y+     w
+Y-     s
+X+     d
+X-     a
+freeze z
+pan +  f
+pan -  h
+tilt + t
+tilt - g
+z_rot+ y
+z_rot- r
 
-## Spec : 
+## Node comunication rate : 
 
 1. **publish rate** : The raven_jointmove.msg is being sent at 1000 Hz.
 
-2. **feedback rate** : The raven_state.msg is being sent at 100 Hz in listener.cpp. But in actual RAVEN software, raven_state.msg is updated at 1000 Hz.
+2. **feedback rate** : The joint_state is being sent at 100 Hz in listener.cpp. But in actual RAVEN software, raven_state.msg is updated at 1000 Hz.
 
 
 ## Relavent links:
 1. **uw-biorobotics/raven2** : This is the main RAVEN software to connect to. And [this code](https://github.com/uw-biorobotics/raven2) will replace the ROS node listenersnakeraven that we temporarily have for now.
-2. **AutoCircle_generator** : This code is based on the AutoCircle_generator code https://github.com/melodysu83/AutoCircle_generater
+2. **AutoCircle_generator** : This code is based on the [AutoCircle_generator code](https://github.com/melodysu83/AutoCircle_generater)
