@@ -1,6 +1,18 @@
+# SnakeRaven a 3D printed Snake-like manipulator for the Raven II
+SnakeRaven is an instrument that can be attached to the Raven II and controlled via keyboard teleoperation in the code on theis github. 
+
+This software primarily contains:
+- ROS nodes for controlling SnakeRaven when attached to the Raven II
+- Modifications to raven_2 source code to have a new velocity joint control mode
+- A class with functions that solves the forward and inverse kinematics of SnakeRaven in C++
+
+![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png)
+
 # Snake Raven Controller
 
-This software is a ROS node that generates RAVEN joint position commands for it to follow a trajectory from keyboard teleoperation. There are 2 ROS nodes in this folder: talkerSnakeRaven and listenerSnakeRaven. An illustration of the control software flowchart is displayed below:
+This software contains a ROS node that generates RAVEN joint position commands for it to follow a trajectory from keyboard teleoperation. There are 2 ROS nodes in this folder: talkerSnakeRaven (the main node) and listenerSnakeRaven (a test node that can be used if not connected to the Raven II). 
+
+The Raven II main software **raven_2** is modified (these modifications are in folder [raven_2](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/tree/master/raven_2) to comunicate with the **snake_raven_controller** via publishers and subscribers. An illustration of the control software flowchart is displayed below:
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/ControlDiagram.PNG)
 
@@ -11,9 +23,13 @@ The two ROS nodes talkerSnakeRaven and listenerSnakeRaven exchange information t
 2. **raven_automove.msg** : This topic stores the motion command for RAVEN to move accordingly.
 
 
-## ROS nodes :
-1. **talkerSnakeRaven** : This ROS node is the command generator. It subscribes to raven_state.msg ROS topic to get current RAVEN status, then computes corresponding motion commands for the robot arm to follow circle trajectory. Finally, it publishes to raven_automove.msg ROS topic.
-2. **listenerSnakeRaven** : This ROS node is only for testing. It serves the same purpose as the main RAVEN software, and will be replaced during actual use. It communicates with the talkerSnakeRaven by listening to the motion commands and sends out RAVEN state variable feedback after following the command.
+## ROS node communication :
+The ros communication is shown in the rqt_graph below:
+
+![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/rqt_graph_snakeraven.png)
+
+1. **talkerSnakeRaven** : rosrun this file to run node /snake_raven_controller It subscribes to /joint_states ROS topic to get the current joint values and publishes joint deltas in topic /raven_jointmove
+2. **listenerSnakeRaven** : This ROS node is only for testing. It can be used to replace the actual node /r2_control
 
 ## Prerequisite installation :
 The snake_raven_controller uses Eigen to compute the kinematics control algorithms. To install this do:
