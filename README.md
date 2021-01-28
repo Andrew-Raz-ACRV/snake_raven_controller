@@ -33,7 +33,7 @@ The snake_raven_controller uses Eigen to compute the kinematics control algorith
 3. In snake_raven_controller/ create the folder 'include' and paste 'Eigen' into the include folder.
 
 ## raven_2 main thread modifications :
-The raven_2 source code was modified to with a new control mode that allowed incremental joint updates to from the 'raven_jointmove' topic.
+The raven_2 source code was modified to have a new control mode that allowed incremental joint updates from the 'raven_jointmove' topic.
 These are the main modifications are in folder raven_2 inside subfolders /src /msg and /include
 
 Important modifcations in raven_2/src
@@ -79,7 +79,7 @@ The source code for controlling snakeraven
 
 **package.xml** ------------------------- The ROS package.xml file.
 
-The file talker.cpp is the heart of SnakeRaven controller, it is where the main is. This file uses the class Raven_Controller. Inside Raven_Contoller, there are two threads - ros_thread and console_thread, which takes charge of the ROS publishing/subscribing issues and user console inputs respectively. The class Raven_Contoller depends on class SnakeRaven to compute and design snake robot trajectories. In the class Raven_Controller, there are two SnakeRaven objects managing the motion of LEFT and RIGHT arm of RAVEN. (All these files belong to the talkerSnakeRaven ROS node.)
+The file talker.cpp is the heart of SnakeRaven controller, it is where the main is. This file uses the class Raven_Controller. Inside Raven_Contoller, there are two threads - ros_thread and console_thread, which takes charge of the ROS publishing/subscribing issues and user console inputs respectively. The class Raven_Contoller depends on class SnakeRaven to compute and design snake robot trajectories.
 
 ## How To Use This Code on the Raven II: 
 If you have an assmbled SnakeRaven tool you can follow these instuctions to integrate it to the Raven II with this code:
@@ -109,7 +109,7 @@ rosrun snake_raven_controller talkersnakeraven
 
 7. **Selection Menu** : At this point you can choose either:
 
-- 0. **Calibration** - this moves the right arm to be perpendicular to the table and the left arm aside. It will pop up a message saying that you can insert the SnakeRaven tool onto the tool holder. You can use the keyboard to adjust the joints of the robot inividually particularly to insert the SnakeRaven tool to mesh with the robot. Good Calibration is when SnakeRaven is neutral and perpendicular to the table as seen in the SnakeRaven image in this readme.
+- 0. **Calibration** - this moves the right arm to be perpendicular to the table and the left arm aside. It will pop up a message saying that you can insert the SnakeRaven tool onto the tool holder. You can use the keyboard to adjust the joints of the robot inividually particularly to insert the SnakeRaven tool to mesh with the robot. Good Calibration is when SnakeRaven is neutral and perpendicular to the table as seen in the SnakeRaven [image]((https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png).
 
 - 1. **Joint Control** - this allows you to control the robot joints individually with the keyboard without calibration
 
