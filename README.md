@@ -1,9 +1,9 @@
 # SnakeRaven a 3D printed Snake-like manipulator for the Raven II
-SnakeRaven is an instrument that can be attached to the Raven II and controlled via keyboard teleoperation in the code on theis github. 
+SnakeRaven is an instrument that can be attached to the Raven II and controlled via keyboard teleoperation. 
 
 This software primarily contains:
 - ROS nodes for controlling SnakeRaven when attached to the Raven II
-- Modifications to raven_2 source code to have a new velocity joint control mode
+- Modifications to the raven_2 source code to have a new velocity joint control mode
 - A class with functions that solves the forward and inverse kinematics of SnakeRaven in C++
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png)
@@ -12,7 +12,7 @@ A. SnakeRaven on the Raven II B. The adaptor piece C. The snake endeffector
 
 # Snake Raven Controller
 
-This software contains a ROS node that generates RAVEN joint position commands for it to follow a trajectory from keyboard teleoperation. There are 2 ROS nodes in this folder: talkerSnakeRaven (the main node) and listenerSnakeRaven (a test node that can be used if not connected to the Raven II). 
+This software contains a ROS node that generates joint position commands for Raven to follow a trajectory from keyboard teleoperation. There are 2 ROS nodes in this folder: talkerSnakeRaven (the main node) and listenerSnakeRaven (a test node that can be used if not connected to the Raven II). 
 
 The Raven II main software **raven_2** is modified (these modifications are in folder [raven_2](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/tree/master/raven_2)) to comunicate with the **snake_raven_controller** via publishers and subscribers. An illustration of the control software flowchart is displayed below:
 
@@ -174,6 +174,9 @@ Relative to the Remote Centre of Motion
 
 2. **feedback rate** : The joint_state is being sent at 100 Hz in listener.cpp. But in actual RAVEN software, raven_state.msg is updated at 1000 Hz.
 
+## Contact
+
+This code is written by Andrew Razjigaev. If there are queries you can contact him via email: andrew.razjigaev@hdr.qut.edu.au
 
 ## Relavent links:
 1. **uw-biorobotics/raven2** : This is the main RAVEN software to connect to. And [this code](https://github.com/uw-biorobotics/raven2) will replace the ROS node listenersnakeraven that we temporarily have for now.
