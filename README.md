@@ -15,55 +15,48 @@ The two ROS nodes talkerSnakeRaven and listenerSnakeRaven exchange information t
 1. **talkerSnakeRaven** : This ROS node is the command generator. It subscribes to raven_state.msg ROS topic to get current RAVEN status, then computes corresponding motion commands for the robot arm to follow circle trajectory. Finally, it publishes to raven_automove.msg ROS topic.
 2. **listenerSnakeRaven** : This ROS node is only for testing. It serves the same purpose as the main RAVEN software, and will be replaced during actual use. It communicates with the talkerSnakeRaven by listening to the motion commands and sends out RAVEN state variable feedback after following the command.
 
-## Prerequisite File :
-The snake_raven_controller uses Eigen to compute the kinematics control algorithms. Go to http://eigen.tuxfamily.org/index.php?title=Main_Page#Download to get the most recent Eigen. Download the zip, extract and find the subfolder "Eigen" and paste the folder and place it into the include folder.
+## Prerequisite installation :
+The snake_raven_controller uses Eigen to compute the kinematics control algorithms. To install this do:
+1. Go to http://eigen.tuxfamily.org/index.php?title=Main_Page#Download to get the most recent Eigen. 
+2. Download the zip, extract and find the subfolder "Eigen" 
+3. In snake_raven_controller/ create the folder 'include' and paste 'Eigen' into the include folder.
 
-**/include folder:**
-----**/Eigen**
-
-## Files : 
-
+## snake_raven_controller main files : 
 
 **/msg folder:**
 
-----**raven_automove.msg**
+----**raven_jointmove.msg**
 
 ----**raven_state.msg**
+
+----**snakeraven_state.msg**
     
 **/src folder:**
 
 ----**/raven_2 folder:**
 
---------**raven_automove.h**
-
 --------**raven_state.h**
 
-----**DS0.h**
+----**Raven_Controller.cpp** --------------------- (original) This is where the console interactions and modes are
+ 
+----**Raven_Controller.h** ----------------------- (original) This class controls the threads and workflow.
 
-----**DS1.h**
+----**SnakeRaven.cpp** -------------------- (original) This is where the kinematics functions are
 
-----**Raven_Controller.cpp** --------------------- (original)
+----**SnakeRaven.h** ---------------------- (original) This class defines all the kinematic math functions
 
-----**Raven_Controller.h** ----------------------- (original)This class controls the threads and workflow.
+----**listener.cpp** ----------------------------- (original) A test node to replace the main RAVEN software.
 
-----**SnakeRaven.cpp** -------------------- (original)
+----**talker.cpp** ------------------------------- (original) This file is where main is.
 
-----**SnakeRaven.h** ---------------------- (original)This class defines all the kinematic math
+**CMakeLists.txt** ------------------------------- (original)
 
-----**listener.cpp** ----------------------------- (original)This will be replaced with main RAVEN software.
+**README.md** ------------------------------------ (original)
 
-----**talker.cpp** ------------------------------- (original)This file is where main is.
+**package.xml** ---------------------------------- (original) The ROS package.xml file.
 
-----**tools.h**
-
-**CMakeLists.txt** ------------------------------- (original)Should merge with CMakeLists.txt in main RAVEN software.
-
-**README.md** ------------------------------------ (original)This file!
-
-**package.xml** ---------------------------------- (original)The ROS package.xml file.
-
-The file talker.cpp is the heart of SnakeRaven controller, it is where the main is. This file uses on methods defined in class Raven_Controller. Inside of class Raven_Contoller, there are two threads - ros_thread and console_thread, which takes charge of the ROS publishing/subscribing issues and user console inputs respectively. The class Raven_Contoller depends on class SnakeRaven to compute and design snake robot trajectories. So, it is basically where all the math is! In the class Raven_Controller, there are two SnakeRaven objects managing the motion of LEFT and RIGHT arm of RAVEN. (All these files belong to the talkerSnakeRaven ROS node.)
-And since we are NOT actually connected to the main RAVEN software yet, we have listener.cpp as the simplified version to simulate the main RAVEN software just so talker.cpp has someone to interact with. Thus, listener.cpp will be completely replaced when we actually combine it with the RAVEN code. (This file belongs to the listenerAutoCircle ROS node.)
+The file talker.cpp is the heart of SnakeRaven controller, it is where the main is. This file uses on methods defined in class Raven_Controller. Inside of class Raven_Contoller, there are two threads - ros_thread and console_thread, which takes charge of the ROS publishing/subscribing issues and user console inputs respectively. The class Raven_Contoller depends on class SnakeRaven to compute and design snake robot trajectories. So, it is basically where all the math is. In the class Raven_Controller, there are two SnakeRaven objects managing the motion of LEFT and RIGHT arm of RAVEN. (All these files belong to the talkerSnakeRaven ROS node.)
+If NOT actually connected to the main RAVEN software, the listener.cpp is the simplified version to simulate the main RAVEN software just so talker.cpp has someone to interact with. Thus, listener.cpp will be completely replaced when we actually combine it with the RAVEN code.
 
 
 ## How To Use This Code: 
@@ -102,8 +95,6 @@ User can choose to control joints individually or control the desired end-effect
 2. **feedback rate** : The raven_state.msg is being sent at 100 Hz in listener.cpp. But in actual RAVEN software, raven_state.msg is updated at 1000 Hz.
 
 
-## Relative links:
-1. **uw-biorobotics/raven2** : This is the main RAVEN software that this AutoCircle generater software is going to connect to. And [this code](https://github.com/uw-biorobotics/raven2) will replace the ROS node listenerAutoCircle that we temporarily have for now.
-2. **raven_absolute_controller** : This is the extended work for RAVEN absolute position control done by Imperial College London. We were originally intended to implement the AutoCircle generater based on their work. But since we want it to be a ROS node instead of teleoperating and sending UDP packages to communicate, we eventually didn't apply [their code](https://github.com/Takskal/raven_absolute_controller). 
-
-
+## Relavent links:
+1. **uw-biorobotics/raven2** : This is the main RAVEN software to connect to. And [this code](https://github.com/uw-biorobotics/raven2) will replace the ROS node listenersnakeraven that we temporarily have for now.
+2. **AutoCircle_generator** : This code is based on the AutoCircle_generator code https://github.com/melodysu83/AutoCircle_generater
