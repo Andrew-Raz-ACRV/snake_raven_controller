@@ -8,7 +8,11 @@ This software primarily contains:
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png)
 
-A. SnakeRaven on the Raven II B. The adaptor piece C. The snake endeffector 
+A. SnakeRaven on the Raven II 
+
+B. The adaptor piece
+
+C. The snake endeffector 
 
 # Snake Raven Controller
 
