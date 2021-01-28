@@ -7,6 +7,7 @@ This software primarily contains:
 - A class with functions that solves the forward and inverse kinematics of SnakeRaven in C++
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png)
+
 A. SnakeRaven on the Raven II B. The adaptor piece C. The snake endeffector 
 
 # Snake Raven Controller
@@ -126,23 +127,24 @@ rosrun snake_raven_controller talkersnakeraven
 1. **Joint Control** - this allows you to control the robot joints individually with the keyboard without calibration
 
 **Joint Control Keyboard Mapping:**
+
 Left Arm
-Shoulder +/-:      1/q
-Elbow +/-:         2/w
-Z Insertion +/-:   3/e
-Tool Rotation +/-: 4/r
-Wrist +/-:         5/t
-Grasp 1 +/-:       6/y
-Grasp 2 +/-:       7/u
+-Shoulder +/-:      1/q
+-Elbow +/-:         2/w
+-Z Insertion +/-:   3/e
+-Tool Rotation +/-: 4/r
+-Wrist +/-:         5/t
+-Grasp 1 +/-:       6/y
+-Grasp 2 +/-:       7/u
 
 Right Arm
-Shoulder +/-:      a/z
-Elbow +/-:         s/x
-Z Insertion +/-:   d/c
-Tool Rotation +/-: f/v
-Wrist +/-:         g/b
-Grasp 1 +/-:       h/n
-Grasp 2 +/-:       j/m
+-Shoulder +/-:      a/z
+-Elbow +/-:         s/x
+-Z Insertion +/-:   d/c
+-Tool Rotation +/-: f/v
+-Wrist +/-:         g/b
+-Grasp 1 +/-:       h/n
+-Grasp 2 +/-:       j/m
 
 2. **Teleoperation** - this allows you to control the SnakeRaven endeffector via keyboard but only after calibration. It has some additional code in Raven_Controller.cpp to:
 - record teleoperation control onto a .csv file in the home folder
@@ -150,19 +152,19 @@ Grasp 2 +/-:       j/m
 
 **Endeffector Keyboard Mapping:**
 Relative to the Remote Centre of Motion
-Z+     q
-Z-     e
-Y+     w
-Y-     s
-X+     d
-X-     a
-freeze z
-pan +  f
-pan -  h
-tilt + t
-tilt - g
-z_rot+ y
-z_rot- r
+-Z+     q
+-Z-     e
+-Y+     w
+-Y-     s
+-X+     d
+-X-     a
+-freeze z
+-pan +  f
+-pan -  h
+-tilt + t
+-tilt - g
+-z_rot+ y
+-z_rot- r
 
 ## Node comunication rate : 
 
