@@ -13,11 +13,16 @@ The two ROS nodes talkerSnakeRaven and listenerSnakeRaven exchange information t
 
 ## ROS nodes :
 1. **talkerSnakeRaven** : This ROS node is the command generator. It subscribes to raven_state.msg ROS topic to get current RAVEN status, then computes corresponding motion commands for the robot arm to follow circle trajectory. Finally, it publishes to raven_automove.msg ROS topic.
-2. **listenerSnakeRaven** : This ROS node is only for testing. It serves the same purpose as the main RAVEN software, and will be replaced during actual use. It communicates with the talkerSnakeRaven by listening to the motion commands and sends out RAVEN state variable feedback after following the command. Thus, it subscribes to raven_automove.msg ROS topic, and updates RAVEN state variables accordingly, then publishes raven_state.msg ROS topic to show how the robot arm is currently posed.
+2. **listenerSnakeRaven** : This ROS node is only for testing. It serves the same purpose as the main RAVEN software, and will be replaced during actual use. It communicates with the talkerSnakeRaven by listening to the motion commands and sends out RAVEN state variable feedback after following the command.
 
+## Prerequisite File :
+The snake_raven_controller uses Eigen to compute the kinematics control algorithms. Go to http://eigen.tuxfamily.org/index.php?title=Main_Page#Download to get the most recent Eigen. Download the zip, extract and find the subfolder "Eigen" and paste the folder and place it into the include folder.
+
+**/include folder:**
+----**/Eigen**
 
 ## Files : 
-This is the big picture of what files are in this snake_raven_controller repository and what are each files are for. Note that only the ones specified as (original) are the original files created here, others are copied from the main RAVEN software and do NOT need to copy again to the main RAVEN software when combining. 
+
 
 **/msg folder:**
 
