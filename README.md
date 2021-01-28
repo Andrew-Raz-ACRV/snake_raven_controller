@@ -18,15 +18,8 @@ The Raven II main software **raven_2** is modified (these modifications are in f
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/ControlDiagram.PNG)
 
-## ROS topics :
-The two ROS nodes talkerSnakeRaven and listenerSnakeRaven exchange information through ROS topics. Below are the two ROS topics that this software use in order to communicate with the main RAVEN software. This is the [link](https://github.com/melodysu83/AutoCircle_generater/tree/master/msg) to the .msg files.
-
-1. **raven_state.msg** : This topic stores current RAVEN state variable values. 
-2. **raven_automove.msg** : This topic stores the motion command for RAVEN to move accordingly.
-
-
-## ROS node communication :
-The ROS node communication is shown in the rqt_graph below:
+## ROS Node-topic communication :
+The two ROS nodes talkerSnakeRaven and r2_control (or listenerSnakeRaven) exchange information through ROS topics. The ROS node communication is shown in the rqt_graph below:
 
 ![alt text](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/rqt_graph_snakeraven.png)
 
