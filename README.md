@@ -50,40 +50,34 @@ In raven_2/include/raven
 
 In raven_2/msg
 
-----**raven_jointmove.msg**
-
-----**raven_state.msg**
+----**raven_jointmove.msg** ------------- This is where the joint deltas come through
 
 ## snake_raven_controller main files : 
 The source code for controlling snakeraven
 
 **/src folder:**
 
-----**talker.cpp** ------------------------------- (original) This file is where main is and it calls the Raven_Controller class
+----**talker.cpp** ---------------------- This file is where main is and it calls the Raven_Controller class
 
-----**Raven_Controller.cpp** --------------------- (original) This is where the console interactions and modes are
+----**Raven_Controller.cpp** ------------ This is where the console interactions and modes are
  
-----**Raven_Controller.h** ----------------------- (original) This class controls the threads and workflow.
+----**Raven_Controller.h** -------------- This class controls the threads and workflow.
 
-----**SnakeRaven.cpp** -------------------- (original) This is where the kinematics functions are for SnakeRaven
+----**SnakeRaven.cpp** ------------------ This is where the kinematics functions are for SnakeRaven
 
-----**SnakeRaven.h** ---------------------- (original) This class defines all the SnakeRaven functions
+----**SnakeRaven.h** -------------------- This class defines all the SnakeRaven functions
 
-----**listener.cpp** ----------------------------- (original) A test node to replace the main RAVEN software.
+----**listener.cpp** -------------------- A test node to replace the main RAVEN software.
 
 **/msg folder:** 
 
-----**raven_jointmove.msg**  ----------------- This is where the joint deltas come through
+----**raven_jointmove.msg**  ------------ This is where the joint deltas come through
 
-----**raven_state.msg** 
+**CMakeLists.txt** ----------------------
 
-----**snakeraven_state.msg**
+**README.md** ---------------------------
 
-**CMakeLists.txt** ------------------------------- (original)
-
-**README.md** ------------------------------------ (original)
-
-**package.xml** ---------------------------------- (original) The ROS package.xml file.
+**package.xml** ------------------------- The ROS package.xml file.
 
 The file talker.cpp is the heart of SnakeRaven controller, it is where the main is. This file uses the class Raven_Controller. Inside Raven_Contoller, there are two threads - ros_thread and console_thread, which takes charge of the ROS publishing/subscribing issues and user console inputs respectively. The class Raven_Contoller depends on class SnakeRaven to compute and design snake robot trajectories. In the class Raven_Controller, there are two SnakeRaven objects managing the motion of LEFT and RIGHT arm of RAVEN. (All these files belong to the talkerSnakeRaven ROS node.)
 
