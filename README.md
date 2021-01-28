@@ -109,7 +109,7 @@ rosrun snake_raven_controller talkersnakeraven
 
 7. **Selection Menu** : At this point you can choose either:
 
-- 0. **Calibration** - this moves the right arm to be perpendicular to the table and the left arm aside. It will pop up a message saying that you can insert the SnakeRaven tool onto the tool holder. You can use the keyboard to adjust the joints of the robot inividually particularly to insert the SnakeRaven tool to mesh with the robot. Good Calibration is when SnakeRaven is neutral and perpendicular to the table as seen in the SnakeRaven [image]((https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png).
+- 0. **Calibration** - this moves the right arm to be perpendicular to the table and the left arm aside. It will pop up a message saying that you can insert the SnakeRaven tool onto the tool holder. You can use the keyboard to adjust the joints of the robot inividually particularly to insert the SnakeRaven tool to mesh with the robot. Good Calibration is when SnakeRaven is neutral and perpendicular to the table as seen in the SnakeRaven [image](https://github.com/Andrew-Raz-ACRV/snake_raven_controller/blob/master/FrontCoverSnake2.png).
 
 - 1. **Joint Control** - this allows you to control the robot joints individually with the keyboard without calibration
 
