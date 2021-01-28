@@ -99,7 +99,7 @@ source devel/setup.bash
 catkin_make
 ```
 
-4. **Run the Raven II** : Without any instruments on the Raven II, roslaunch the robot and press the e-stop and release to go through homing with instruments. 
+4. **Run the Raven II** : Without any instruments on the Raven II, roslaunch the robot and press the e-stop and release to go through homing. 
 ```
 roslaunch raven_2 raven_2.launch
 ```
