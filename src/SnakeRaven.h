@@ -22,7 +22,8 @@ using namespace std;
 //Set the maximum amount of modules for Snake Raven to have
 //This is needed for memory allocation as object's internal size cannot grow
 //You also cannot set it to 2 and use 1 it must be set to the current design model
-#define Max_m 1
+#define Max_m 2
+#define history 10
 
 /*
 Kinematics Math Functions for the Snake Raven Manipulator
@@ -63,6 +64,8 @@ VectorXd cap_mag(const VectorXd& V, const double magnitude);
 
 MatrixXd applyJointLimits(const MatrixXd& q, const MatrixXd& ql, const MatrixXd& qu);
 
+bool JointLimitcheck(const MatrixXd& q, const MatrixXd& ql, const MatrixXd& qu);
+
 MatrixXd dampedLeastSquares(const MatrixXd& J, const MatrixXd& q, const MatrixXd& ql, const MatrixXd& qu);
 
 MatrixXd TransformPoints(const MatrixXd& T, const MatrixXd& p);
@@ -90,7 +93,7 @@ public:
 	//Initialise:
 	//The parameter Matrix
 	Matrix<double, Max_m, 1>  alpha, n, d;
-	double w, da; //da is actuation diameter
+	double w, da, ra; //w is width of tube, da is actuation diameter, ra is its radius
 
 	//Number of modules and Degrees of freedom of this object:
 	int m, DOF;
@@ -105,7 +108,10 @@ public:
 	bool isrightarm;
 
 	//Joint vector and joint limits, motor values, calibration
-	Matrix<double, 3 + 2 * Max_m, 1> q, ql, qu, mv, rate, offset;
+	Matrix<double, 3 + 2 * Max_m, 1> q, ql, qu, mv, mv_pre, mv_pre_ave, rate, offset, q_temp, q_desired, mv_coupling;
+
+	//motor value history
+	Matrix<double, 3 + 2 * Max_m, history> mv_history;
 
 	//Jacobian Matrix: a 6 by DOF matrix
 	Matrix<double, 6, 3 + 2 * Max_m> J;
@@ -113,14 +119,20 @@ public:
 	//Initialise Tendon Matrices:
 	Matrix<double, 2 * Max_m, 2> dL0, dLi, ddL;
 
+	//Control Weighting Matrix for Damped Least Squares
+	DiagonalMatrix<double, 6> W;
+
 	//Construct class with given default properties:
 	SnakeRaven();
 
 	//Initialise SnakeRaven Functions:
+	void reset_q(); //makes q = initial state
+	MatrixXd get_mv_pre_ave();
 	MatrixXd FK(); //Forward Kinematics
 	MatrixXd Jacobian(); //Jacobian matrix
 	MatrixXd GetTendonLengths(); //Tendon Length function
 	VectorXd q2Motor_angles(); //convert q to motor angles on Raven II
+	VectorXd Motor_angles2q(); //convert motor angles from Raven II to q
 
 };
 

@@ -8,15 +8,20 @@ SnakeRaven::SnakeRaven() {
 
 	//Degrees of Freedom:
 	DOF = 3 + 2 * m;//number of DOF
-	da = 10; //mm for adaptor capstan diameter
+	da = 10; //mm for adaptor capstan diameter //10 
+	ra = da / 2.0; //mm radius of capstan adaptor
 	q = MatrixXd::Zero(DOF, 1); // Joint vector
 
 	//Parameter sets:
 	w = 4;//mm
 	isrightarm = true;
 
+	//Weighting matrix for Damped least squares
+	W.diagonal() << 1, 1, 1, 5, 5, 5;
+
 	//Calibration constants
-	rate << MatrixXd::Ones(DOF, 1);
+	rate << -1*MatrixXd::Ones(DOF, 1); //Reverse rotation
+	rate.block(0,0,3,1) = -1*rate.block(0,0,3,1); //But not reverse for first 3 DOF
 	offset << MatrixXd::Zero(DOF, 1);
 
 	if (m == 1) {
@@ -34,9 +39,9 @@ SnakeRaven::SnakeRaven() {
 	}
 	else if (m == 2) {
 		//Double module
-		alpha << 1.39, 1.18; //radians
-		n << 1, 3; //integers
-		d << 6, 0.41; //mm
+		alpha << 0.20, 0.88; //1.39, 1.18; //radians
+		n << 3, 3; //1, 3; //integers
+		d << 1, 1; //6, 0.41; //mm
 		//Initial Calibration configuration
 		if (isrightarm){
 			q << deg2rad(-39.5967), deg2rad(-77.9160), 0, 0, 0, 0, 0;
@@ -50,18 +55,29 @@ SnakeRaven::SnakeRaven() {
 	Tool = Translation3d(0, 0, 5);
 
 	//Get Neutral Tendon lengths
+	q_temp = q;
+	q = MatrixXd::Zero(DOF, 1);
 	dL0 = GetTendonLengths();
+	q = q_temp;
 	
 	//Run all functions
 	Tend = FK(); //initial tool pose
 	J = Jacobian(); //Initial Jacobian matrix
 	mv = q2Motor_angles(); //Current Motor values
+    mv_pre = mv; //previous motor values
+    q_desired = MatrixXd::Zero(DOF, 1); //Record of the desired joint angle
+
+    //motor value history initialisation
+    for (int i = 0; i < history; i++)
+    {
+    	mv_history.block(0,i,DOF,1) = mv_pre;
+    }
 
 	//Automate Joint limit definitions:
 
 	//Joint Limit definition
-	ql(0) = -2*PI; ql(1) = -2*PI; ql(2) = -300;//mm
-	qu(0) = 2*PI; qu(1) = 2*PI; qu(2) = 300;//mm
+	ql(0) = q(0)-deg2rad(60); ql(1) = q(1)-deg2rad(45); ql(2) = -150;//mm
+	qu(0) = q(0)+deg2rad(60); qu(1) = q(1)+deg2rad(45); qu(2) = 150;//mm
 
 	//Variable Module Joint limits:
 	for (int i = 0; i < m; i++)
@@ -72,6 +88,62 @@ SnakeRaven::SnakeRaven() {
 		qu(3 + 2 * i) = theta_max;		qu(4 + 2 * i) = theta_max;
 	}
 
+}
+
+//Reset q to initial
+void SnakeRaven::reset_q()
+{
+	//Reset q vector
+	if (m == 1) {
+		//Initial Calibration configuration
+		if (isrightarm){
+			q << deg2rad(-39.5967), deg2rad(-77.9160), 0, 0, 0;
+		}
+		else{
+			q << deg2rad(39.5967), deg2rad(-102.0840), 0, 0, 0;
+		}
+	}
+	else if (m == 2) {
+		//Initial Calibration configuration
+		if (isrightarm){
+			q << deg2rad(-39.5967), deg2rad(-77.9160), 0, 0, 0, 0, 0;
+		}
+		else{
+			q << deg2rad(39.5967), deg2rad(-102.0840), 0, 0, 0, 0, 0;
+		}
+	}
+
+	//Recompute the following:
+	//Get Neutral Tendon lengths
+	dL0 = GetTendonLengths();
+	
+	//Run all functions
+	Tend = FK(); //initial tool pose
+	J = Jacobian(); //Initial Jacobian matrix
+	mv = q2Motor_angles(); //Current Motor values
+	mv_pre = mv; // previous motor values
+
+	//motor value history initialisation
+	for (int i = 0; i < history; i++)
+    {
+    	mv_history.block(0,i,DOF,1) = mv_pre;
+    }
+}
+
+//this is for an average filter of motor values
+MatrixXd SnakeRaven::get_mv_pre_ave()
+{
+	//mv_pre was read by the sensor
+	//shift the previous values right in the matrix columns
+	mv_history.block(0,1,DOF,history-1) = mv_history.block(0,0,DOF,history-1);
+
+	//append the current mv_pre to the start
+	mv_history.block(0,0,DOF,1) = mv_pre;
+
+	//Compute the average
+	mv_pre_ave = mv_history.rowwise().mean();
+
+	return mv_pre_ave;
 }
 
 //Forward Kinematics Function
@@ -602,6 +674,7 @@ MatrixXd SnakeRaven::GetTendonLengths()
 	return dLi;
 }
 
+/*
 //Motor Values Function
 VectorXd SnakeRaven::q2Motor_angles()
 {
@@ -636,6 +709,187 @@ VectorXd SnakeRaven::q2Motor_angles()
 
 	//Return motor position
 	return mv;
+}
+*/
+
+//Motor Values Function
+VectorXd SnakeRaven::q2Motor_angles()
+{
+	//Set the motor angles as the last q
+	mv = q;
+
+	//Find Change in Tendon Lengths
+	dLi = GetTendonLengths(); //Current lengths
+	ddL = dLi - dL0; //subtract from neutral
+
+	//Extract the wrap-up rotation
+	for (int i = 0; i < (2 * m); i++)
+	{
+		mv(3 + i) = ddL(i, 0) / (da / 2.0);
+	}
+
+	//Go through calibration values:
+	for (int i = 0; i < DOF; i++)
+	{
+		mv(i) = rate(i)*mv(i) + offset(i);
+	}
+
+	//Return motor position
+	return mv;
+}
+
+
+//Motor Values Function
+VectorXd SnakeRaven::Motor_angles2q()
+{
+	//Initialise estimate of q
+	q = MatrixXd::Zero(DOF, 1);
+	int iter = 0;
+
+	//Go through calibration values:
+	for (int i = 0; i < DOF; i++)
+	{
+		mv_pre(i) = (mv_pre(i) - offset(i)) / rate(i);
+	}
+
+	//Raven Joints are direct mapping
+	for (int i = 0; i < 3; i++)
+	{
+		q(i) = mv_pre(i);
+	}
+
+	//Snake Joints estimation:
+	//The pan first assumption
+	bool pan_first = true;
+	
+	for (int k = 0; k < m; k++)
+	{
+		//Decide on number of pan and tilt joints:
+		double np, nt;
+		if (pan_first == true) {
+			np = round(n(k) / 2.0); nt = n(k) - np;
+		}
+		else {
+			nt = round(n(k) / 2.0); np = n(k) - nt;
+		}
+
+		//Get Radius of curvature from alpha:
+		double r = (w / 2.0) / sin(alpha(k));
+
+		//Segment-wise Coupling
+		if (k > 0)
+		{
+			//If not first module then compute coupling of tendons
+			mv_coupling = MatrixXd::Zero(DOF, 1);
+			q_temp = q; //preserve original data
+
+			//Isolate the coupling by determining it relative to neutral
+			q(3 + 2 * k) = 0; //pan angle
+			q(4 + 2 * k) = 0; //tilt angle
+
+			//Find Change in Tendon Lengths
+			dLi = GetTendonLengths(); //Current lengths
+			ddL = dLi - dL0; //subtract from neutral
+
+			//Get motor component from coupling
+			mv_coupling(3 + 2 * k) = ddL(2 * k, 0) / (da / 2.0);
+			mv_coupling(4 + 2 * k) = ddL(1 + 2 * k, 0) / (da / 2.0);
+
+			//Subtract coupling effect elementwise
+			mv_pre = mv_pre - mv_coupling;
+
+			//Return the data back to original
+			q = q_temp;
+		}
+
+		//Solving the Current Module pan and tilt angles
+		MatrixXd q_(2, 1);
+		q_ << q(3 + 2 * k), q(4 + 2 * k); //current estimate
+		MatrixXd m_actual(2, 1);
+		m_actual << mv_pre(3 + 2 * k), mv_pre(4 + 2 * k); //motor values
+
+		if (np == 0)
+		{
+			//No pan no coupling
+			q_(0) = 0;
+			q_(1) = 2 * nt*(alpha(k) - acos(cos(alpha(k)) - (m_actual(1)*ra / (nt*w))*sin(alpha(k))));
+		}
+		else if (nt == 0)
+		{
+			//No tilt no coupling
+			q_(0) = 2 * np*(alpha(k) - acos(cos(alpha(k)) - (m_actual(0)*ra / (np*w))*sin(alpha(k))));
+			q_(1) = 0;
+		}
+		else
+		{
+			//Pan and tilt both couple
+			//estimate by minimising motor value estimate error
+			MatrixXd m_estimate(2, 1);
+			m_estimate(0) = (2 * r*np*(cos(alpha(k)) - cos(alpha(k) - (q_(0) / (2 * np)))) + 2 * r*nt*(1 - cos(q_(1) / (2 * nt)))) / ra;
+			m_estimate(1) = (2 * r*nt*(cos(alpha(k)) - cos(alpha(k) - (q_(1) / (2 * nt)))) + 2 * r*np*(1 - cos(q_(0) / (2 * np)))) / ra;
+
+			//Error
+			MatrixXd error;
+			error = m_actual - m_estimate;
+
+			//Actuation Jacobian
+			MatrixXd Ja;
+			Ja = MatrixXd::Zero(2, 2);
+
+			//Iteratively solve q
+			//cout<<"stuck here"<<endl;
+			iter = 0;
+			while (error.norm() > 0.001)
+			{
+				//watch out for this never converging due to noise
+				iter++;
+
+				//Compute actuation jacobian
+				Ja(0, 0) = (-r / ra)*sin(alpha(k) - q_(0) / (2 * np));  
+				Ja(0, 1) = (r / ra)*sin(q_(1) / (2 * nt));
+				Ja(1, 0) = (r / ra)*sin(q_(0) / (2 * np));
+				Ja(1, 1) = (-r / ra)*sin(alpha(k) - q_(1) / (2 * nt));
+
+				//Update joint Estimate
+				q_ += Ja.inverse()*error;
+
+				//Update motor estimate
+				m_estimate(0) = (2 * r*np*(cos(alpha(k)) - cos(alpha(k) - (q_(0) / (2 * np)))) + 2 * r*nt*(1 - cos(q_(1) / (2 * nt)))) / ra;
+				m_estimate(1) = (2 * r*nt*(cos(alpha(k)) - cos(alpha(k) - (q_(1) / (2 * nt)))) + 2 * r*np*(1 - cos(q_(0) / (2 * np)))) / ra;
+
+				//Update error
+				error = m_actual - m_estimate;
+
+				//In case error never converges assume 100 iterations gives descent results
+				if(iter>100){
+					//cout<<"Motor_angles2q failed to converge estimate in 1000 iterations..."<<endl;
+					break;
+				}
+			}
+			//cout<<"not stuck here"<<endl;
+		}
+
+		//Append solution to q
+		q(3 + 2 * k) = q_(0);
+		q(4 + 2 * k) = q_(1);
+
+		//Next section decide if it starts as a pan or tilt
+		if ((pan_first == true) && (isodd(n(k)))) {
+			pan_first = false;
+		}
+		else if ((pan_first == false) && (isodd(n(k)))) {
+			pan_first = true;
+		}
+		else if ((pan_first == true) && (isodd(n(k)) == false)) {
+			pan_first = true;
+		}
+		else if ((pan_first == false) && (isodd(n(k)) == false)) {
+			pan_first = false;
+		}
+	}
+
+	//Return joint state
+	return q;
 }
 
 
@@ -743,6 +997,29 @@ MatrixXd applyJointLimits(const MatrixXd& q, const MatrixXd& ql, const MatrixXd&
 	return q_;
 }
 
+bool JointLimitcheck(const MatrixXd& q, const MatrixXd& ql, const MatrixXd& qu)
+{
+	//initially assume no joint limit is reached
+	bool result = false;
+
+	//For each degree of freedom check the joint limits ql qu
+	int DOF = q.size();
+	for (int i = 0; i < DOF; i++)
+	{
+		if (q(i) < ql(i)) {
+			result = true;
+			//cout<<"Lower limit reached"<<endl;
+		}
+		else if (q(i) > qu(i)) {
+			result = true;
+			//cout<<"Upper limit reached"<<endl;
+		}
+	}
+
+	//Return logic
+	return result;
+}
+
 
 MatrixXd dampedLeastSquares(const MatrixXd& J, const MatrixXd& q, const MatrixXd& ql, const MatrixXd& qu)
 {
@@ -751,6 +1028,7 @@ MatrixXd dampedLeastSquares(const MatrixXd& J, const MatrixXd& q, const MatrixXd
 	//Damping Matrix:
 	int DOF = q.size();
 	MatrixXd D = MatrixXd::Identity(DOF, DOF);
+	/*
 	//Penalty gains
 	double c, p, w; 
 	c = 1; p = 2; w = 1;
@@ -763,12 +1041,21 @@ MatrixXd dampedLeastSquares(const MatrixXd& J, const MatrixXd& q, const MatrixXd
 		den = qu(i) - ql(i);
 		D(i, i) = c*pow((num / den),p) + (1 / w);
 	}
-
+	*/
 	//Now compute the Pseudo Inverse of the Jacobian
-	MatrixXd inv_J;
-	inv_J = (J.transpose() * J + D * D).inverse() * J.transpose();
+	//MatrixXd inv_J;
+	//inv_J = (J.transpose() * J + D * D).inverse() * J.transpose();
 
 	//Matrix<double, 3 + 2 * Max_m, 6> inv_J;
+
+
+	//New Method for damped least squares C++ June 2020
+	MatrixXd inv_J, A, b;
+	A = J.transpose() * J + D * D;
+	b = J.transpose();
+	inv_J = A.fullPivLu().solve(b);
+
+
 	return inv_J;
 }
 
