@@ -21,9 +21,20 @@ The snake_raven_controller uses Eigen to compute the kinematics control algorith
 2. Download the zip, extract and find the subfolder "Eigen" 
 3. In snake_raven_controller/ create the folder 'include' and paste 'Eigen' into the include folder.
 
+## raven_2 main thread modifications :
+In order to get the joint motion to work the raven_2 source code was modified to follow increment the joints with small deltas.
+These are the main modiffications to the source code:
+
+Important files in raven_2/src
+---**local_io.cpp** --------------------- This is where the new ros publisher and subscriber defined 'JointState' and 'raven_jointmove'
+---**rt_raven.cpp** --------------------- This is where the new control mode is: 'raven_joint_velocity_control'
+---**trajectory.cpp** ------------------- This is where the deltas increment the desired joint position: 'update_joint_position_trajectory'
+In raven_2/include/raven
+---**defines.h** ------------------------ Skip tool initialisation is enabled line 45: #define RICKS_TOOLS     //skips tool initialization
+
 ## snake_raven_controller main files : 
 
-**/msg folder:**
+**/msg folder:** 
 
 ----**raven_jointmove.msg**
 
